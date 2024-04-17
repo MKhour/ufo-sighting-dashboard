@@ -68,7 +68,7 @@ sightings_by_time_server <- function(input, output) {
   
 }
 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = sightings_by_time_ui, server = sightings_by_time_server)
 
 
 
