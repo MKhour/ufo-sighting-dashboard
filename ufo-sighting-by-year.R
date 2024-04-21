@@ -7,10 +7,15 @@ library(dplyr)
 library(ggplot2)
 options(tigris_use_cache = TRUE)
 
+#Cleaning the Data for All of App
 setwd('C:/Users/Kyle Tran/Downloads')
 ufo_data = read.csv("ufoData.csv")
 ufo_data$datetime <- as.POSIXct(ufo_data$datetime, format = "%m/%d/%Y %H:%M", errors="coerce")
 ufo_data <- ufo_data[!is.na(ufo_data$datetime), ]
+ufo_data <- ufo_data[!ufo_data$state %in% c("", " "), ]
+ufo_data <- ufo_data %>% rename(duration = duration..seconds.)
+ufo_data$shape <- ifelse(ufo_data$shape == "", "unknown", ufo_data$shape)
+ufo_data$duration <- as.numeric(as.character(ufo_data$duration))
 ufo_data$latitude <- as.numeric(ufo_data$latitude)
 ufo_data$longitude <- as.numeric(ufo_data$longitude)
 
@@ -41,9 +46,7 @@ ufo_data$state = toupper(ufo_data$state)
 ufo_data <- ufo_data %>% filter(state == state_abb | (country != "us" & country != ""))
 View(ufo_data)
 
-#1. Extracting Variable Data
-
-#a. Years/Times From DateTime
+#Extracting Years/Times From DateTime
 ufo_data$year <- year(ufo_data$datetime)
 ufo_data$time_of_day <- case_when(
   hour(ufo_data$datetime) < 12 ~ "Morning",
@@ -53,27 +56,32 @@ ufo_data$time_of_day <- case_when(
 
 
 #2. Creating UI for Page
-sightings_by_time_ui <- fluidPage(
+sightings_by_time_ui <- function(id) {
+  ns <- NS(id)
+  fluidPage(
   titlePanel("UFO Sightings Over Time"),
   
   sidebarLayout(
     sidebarPanel(
-      sliderInput("year_range", "Select Year", min = min(ufo_data$year), max = max(ufo_data$year), value = c(min(ufo_data$year), max(ufo_data$year))),
-      selectInput("time_of_day", "Select Time of Day", choices = c("Morning", "Day", "Night")),
-      selectInput("states", "State", choices = c("All Entries", sort(unique(ufo_data$state)), selected = "All Entries"))
+      sliderInput(ns("year_range"), "Select Year", min = min(ufo_data$year), max = max(ufo_data$year), value = c(min(ufo_data$year), max(ufo_data$year))),
+      selectInput(ns("time_of_day"), "Select Time of Day", choices = c("Morning", "Day", "Night")),
+      selectInput(ns("states"), "State", choices = c("All Entries", sort(unique(ufo_data$state))))
     ),
     mainPanel(
       tabsetPanel(
-        tabPanel("Map", leafletOutput("ufo_map_by_time")),
-        tabPanel("Bar Graph", plotOutput("ufo_plot_bar_graph"))
+        tabPanel("Map", leafletOutput(ns("ufo_map_by_time"))),
+        tabPanel("Bar Graph", plotOutput(ns("ufo_plot_bar_graph")))
       )
     )
   )
 )
+}
+
 
 #3. Creating Server for Page
-sightings_by_time_server <- function(input, output) {
+sightings_by_time_server <- function(input, output, session) {
   filtered_data <- reactive({
+    req(input$states, input$year_range, input$time_of_day)
     if (input$states == "All Entries") {
       ufo_data %>% filter(year >= input$year_range[1] & 
                year <= input$year_range[2] & time_of_day == input$time_of_day) 
@@ -102,6 +110,7 @@ sightings_by_time_server <- function(input, output) {
  
  #Using leafletProxy to update map without re-rendering
  observe({
+   req(input$states, input$year_range, input$time_of_day)
    data <- filtered_data()
    
    leafletProxy("ufo_map_by_time", data = data) %>% 

@@ -4,41 +4,45 @@ library(dplyr)
 library(ggplot2)
 library(plotly)
 
-setwd('C:/Users/fletc/Downloads')
-ufo_data <- read.csv("scrubbed.csv")
-ufo_data <- ufo_data[!ufo_data$state %in% c("", " "), ]
-ufo_data <- ufo_data %>% rename(duration = duration..seconds.)
-ufo_data$shape <- ifelse(ufo_data$shape == "", "unknown", ufo_data$shape)
+#setwd('C:/Users/fletc/Downloads')
+#setwd('C:/Users/Kyle Tran/Downloads')
+#ufo_data = read.csv("ufoData.csv")
+#ufo_data <- read.csv("scrubbed.csv")
+#ufo_data <- ufo_data[!ufo_data$state %in% c("", " "), ]
+#ufo_data <- ufo_data %>% rename(duration = duration..seconds.)
+#ufo_data$shape <- ifelse(ufo_data$shape == "", "unknown", ufo_data$shape)
 
 # note changed duration (seconds) to duration
-ufo_data$duration <- as.numeric(as.character(ufo_data$duration))
-ufo_data$latitude <- as.numeric(as.character(ufo_data$latitude))
-ufo_data$longitude <- as.numeric(as.character(ufo_data$longitude))
+#ufo_data$duration <- as.numeric(as.character(ufo_data$duration))
+#ufo_data$latitude <- as.numeric(as.character(ufo_data$latitude))
+#ufo_data$longitude <- as.numeric(as.character(ufo_data$longitude))
 
-print(names(ufo_data$shapes))
+#print(names(ufo_data$shapes))
 
 
-ui <- fluidPage(
+shape_ui <- function(id) {
+  ns <- NS(id)
+  fluidPage(
   titlePanel("UFO Sightings By Shape"),
   sidebarLayout(
     sidebarPanel(
-      selectInput("state_select", "State", unique(ufo_data$state)),
-      numericInput("min_duration", "Minimum Duration (seconds)", min = min(ufo_data$duration, na.rm = TRUE), value = min(ufo_data$duration, na.rm = TRUE)),
-      numericInput("max_duration", "Maximum Duration (seconds)", min = min(ufo_data$duration, na.rm = TRUE), value = max(ufo_data$duration, na.rm = TRUE)),
-      selectInput("shape_select", "Select Shape", choices = unique(ufo_data$shape)),
-      checkboxInput("show_combined", "Show Total Shape Counts", value = FALSE)
+      selectInput(ns("state_select"), "State", unique(ufo_data$state)),
+      numericInput(ns("min_duration"), "Minimum Duration (seconds)", min = min(ufo_data$duration, na.rm = TRUE), value = min(ufo_data$duration, na.rm = TRUE)),
+      numericInput(ns("max_duration"), "Maximum Duration (seconds)", min = min(ufo_data$duration, na.rm = TRUE), value = max(ufo_data$duration, na.rm = TRUE)),
+      selectInput(ns("shape_select"), "Select Shape", choices = unique(ufo_data$shape)),
+      checkboxInput(ns("show_combined"), "Show Total Shape Counts", value = FALSE)
     ),
     mainPanel(
       tabsetPanel(
-        tabPanel("Scatterplot", plotOutput("scatter_plot")),
-        tabPanel("Barchart", plotlyOutput("shape_plot")),
-        tabPanel("Map", leafletOutput("map"))
+        tabPanel("Scatterplot", plotOutput(ns("scatter_plot"))),
+        tabPanel("Barchart", plotlyOutput(ns("shape_plot"))),
+        tabPanel("Map", leafletOutput(ns("map"))
       )
     )
-  )
-)
+  ))
+)}
 
-server <- function(input, output) {
+shape_server <- function(input, output, session) {
   filtered_data <- reactive({
     ufo_data %>%
       filter(state %in% input$state_select,
@@ -93,4 +97,4 @@ server <- function(input, output) {
   })
 }
 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = shape_ui, server = shape_server)
