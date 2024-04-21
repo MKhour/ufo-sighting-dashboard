@@ -2,52 +2,49 @@ library(shiny)
 library(leaflet)
 library(dplyr)
 library(ggplot2)
+library(plotly)
 
 setwd('C:/Users/fletc/Downloads')
 ufo_data <- read.csv("scrubbed.csv")
 ufo_data <- ufo_data[!ufo_data$state %in% c("", " "), ]
+ufo_data <- ufo_data %>% rename(duration = duration..seconds.)
+ufo_data$shape <- ifelse(ufo_data$shape == "", "unknown", ufo_data$shape)
 
 # note changed duration (seconds) to duration
 ufo_data$duration <- as.numeric(as.character(ufo_data$duration))
 ufo_data$latitude <- as.numeric(as.character(ufo_data$latitude))
 ufo_data$longitude <- as.numeric(as.character(ufo_data$longitude))
 
-print(names(ufo_data))
+print(names(ufo_data$shapes))
 
 
 ui <- fluidPage(
-  titlePanel("UFO Sightings Explorer"),
+  titlePanel("UFO Sightings By Shape"),
   sidebarLayout(
     sidebarPanel(
-      selectInput("state_select", "Select State", unique(ufo_data$state)),
+      selectInput("state_select", "State", unique(ufo_data$state)),
       numericInput("min_duration", "Minimum Duration (seconds)", min = min(ufo_data$duration, na.rm = TRUE), value = min(ufo_data$duration, na.rm = TRUE)),
-      numericInput("max_duration", "Maximum Duration (seconds)", max = max(ufo_data$duration, na.rm = TRUE), value = max(ufo_data$duration, na.rm = TRUE)),
-      sliderInput("duration_range", "Duration Range (seconds)", min = min(ufo_data$duration, na.rm = TRUE), max = max(ufo_data$duration, na.rm = TRUE), value = c(min(ufo_data$duration, na.rm = TRUE), max(ufo_data$duration, na.rm = TRUE)))
+      numericInput("max_duration", "Maximum Duration (seconds)", min = min(ufo_data$duration, na.rm = TRUE), value = max(ufo_data$duration, na.rm = TRUE)),
+      selectInput("shape_select", "Select Shape", choices = unique(ufo_data$shape)),
+      checkboxInput("show_combined", "Show Total Shape Counts", value = FALSE)
     ),
     mainPanel(
       tabsetPanel(
-        tabPanel("Map", leafletOutput("map")),
-        tabPanel("Scatter Plot", plotOutput("scatter_plot"))
+        tabPanel("Scatterplot", plotOutput("scatter_plot")),
+        tabPanel("Barchart", plotlyOutput("shape_plot")),
+        tabPanel("Map", leafletOutput("map"))
       )
     )
   )
 )
 
 server <- function(input, output) {
-  
-  observe({
-    updateSliderInput(session = getDefaultReactiveDomain(), "duration_range",
-                      min = input$min_duration,
-                      max = input$max_duration,
-                      value = c(input$min_duration, input$max_duration))
-  })
-  
   filtered_data <- reactive({
     ufo_data %>%
       filter(state %in% input$state_select,
              !is.na(duration),
-             duration >= input$duration_range[1],
-             duration <= input$duration_range[2])
+             duration >= input$min_duration,
+             duration <= input$max_duration)
   })
   
   output$map <- renderLeaflet({
@@ -63,6 +60,36 @@ server <- function(input, output) {
     ggplot(filtered_data(), aes(x = duration, y = shape, color = shape)) +
       geom_point() +
       theme_minimal()
+  })
+  
+  output$shape_plot <- renderPlotly({
+    filtered_data <- ufo_data %>%
+      filter(shape == input$shape_select)
+    
+    if (input$show_combined) {
+      other_data <- ufo_data %>%
+        filter(shape != input$shape_select)
+      
+      bar_data <- other_data %>%
+        group_by(state) %>%
+        summarise(other_count = n()) %>%
+        left_join(filtered_data %>%
+                    group_by(state) %>%
+                    summarise(selected_count = n()), by = "state")
+      
+      p <- ggplot(bar_data, aes(x = state)) +
+        geom_col(aes(y = other_count, fill = "Other Shapes"), position = "dodge") +
+        geom_col(aes(y = selected_count, fill = input$shape_select), position = "dodge") +
+        labs(x = "State", y = "Count", fill = "Shape") +
+        theme_minimal()
+    } else {
+      p <- ggplot(filtered_data, aes(x = state, fill = shape)) +
+        geom_bar() +
+        labs(x = "State", y = "Count") +
+        theme_minimal()
+    }
+    
+    ggplotly(p, tooltip = "text", hoverinfo="text", hovertext=~state)
   })
 }
 
