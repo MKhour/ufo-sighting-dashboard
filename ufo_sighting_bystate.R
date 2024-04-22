@@ -33,7 +33,9 @@ ui <- fluidPage(
   titlePanel("UFO Sightings in the United States"),
   sidebarLayout(
     sidebarPanel(
-      selectInput("state", "Select State:", choices = unique_states),
+      selectInput("state", "Select State:", choices = c("Please select state", unique_states)),
+      h4("Number of Sightings in Selected State:"),
+      textOutput("selected_state_count"),
       h4("Top States with Most UFO Sightings:"),
       dataTableOutput("top_states_table")
     ),
@@ -48,7 +50,16 @@ server <- function(input, output) {
   
   # Filter UFO data based on selected state
   filtered_data <- reactive({
-    ufo_data[ufo_data$state == input$state, ]
+    if (input$state == "Please select state") {
+      return(ufo_data)
+    } else {
+      return(ufo_data[ufo_data$state == input$state, ])
+    }
+  })
+  
+  # Number of sightings for selected state
+  selected_state_count <- reactive({
+    nrow(filtered_data())
   })
   
   # Render leaflet map
@@ -56,9 +67,13 @@ server <- function(input, output) {
     leaflet() %>%
       addTiles() %>%
       setView(lng = -98.5795, lat = 39.8283, zoom = 4) %>%
-      addMarkers(data = filtered_data(), 
-                 lng = ~longitude, lat = ~latitude,
-                 popup = ~as.character(paste("Date:", datetime, "<br>", "City:", city, "<br>", "State:", state)))
+      addCircleMarkers(data = filtered_data(), 
+                       radius = 3,
+                       clusterOptions = markerClusterOptions(), # Cluster markers by city
+                       popup = ~as.character(paste("Date:", datetime, "<br>", 
+                                                   "City:", city, "<br>", 
+                                                   "State:", state, "<br>",
+                                                   "Comments:", comments)))
   })
   
   # Render top states with most UFO sightings as a datatable
@@ -72,7 +87,18 @@ server <- function(input, output) {
               )
     )
   })
+  
+  # Render number of sightings in selected state
+  output$selected_state_count <- renderText({
+    if (input$state == "Please select state") {
+      return("Please select a state.")
+    } else {
+      paste("Total sightings in", input$state, ":", selected_state_count())
+    }
+  })
 }
 
 # Run the application
 shinyApp(ui = ui, server = server)
+
+
