@@ -3,6 +3,7 @@ library(leaflet)
 library(lubridate)
 library(sf)
 library(tigris)
+library(plotly)
 library(dplyr)
 library(ggplot2)
 options(tigris_use_cache = TRUE)
@@ -64,13 +65,13 @@ sightings_by_time_ui <- function(id) {
   sidebarLayout(
     sidebarPanel(
       sliderInput(ns("year_range"), "Select Year", min = min(ufo_data$year), max = max(ufo_data$year), value = c(min(ufo_data$year), max(ufo_data$year))),
-      selectInput(ns("time_of_day"), "Select Time of Day", choices = c("Morning", "Day", "Night")),
+      checkboxGroupInput(ns("time_of_day"), "Time Of Day", choices = c("Morning"="Morning", "Day"="Day", "Night"="Night"), selected=c("Morning", "Day", "Night")),
       selectInput(ns("states"), "State", choices = c("All Entries", sort(unique(ufo_data$state))))
     ),
     mainPanel(
       tabsetPanel(
         tabPanel("Map", leafletOutput(ns("ufo_map_by_time"))),
-        tabPanel("Bar Graph", plotOutput(ns("ufo_plot_bar_graph")))
+        tabPanel("Bar Graph", plotlyOutput(ns("ufo_plot_bar_graph")))
       )
     )
   )
@@ -80,26 +81,50 @@ sightings_by_time_ui <- function(id) {
 
 #3. Creating Server for Page
 sightings_by_time_server <- function(input, output, session) {
+  #a. filtering data
   filtered_data <- reactive({
     req(input$states, input$year_range, input$time_of_day)
     if (input$states == "All Entries") {
       ufo_data %>% filter(year >= input$year_range[1] & 
-               year <= input$year_range[2] & time_of_day == input$time_of_day) 
+               year <= input$year_range[2] & time_of_day %in% input$time_of_day) 
     } else {
       ufo_data %>% filter(year >= input$year_range[1] & 
-               year <= input$year_range[2] & time_of_day == input$time_of_day &
+               year <= input$year_range[2] & time_of_day %in% input$time_of_day &
                state == input$states)
     }
   })
   
-  output$ufo_plot_bar_graph <- renderPlot({
-    ggplot(data = filtered_data(), aes(x = year)) +
-      geom_bar() +
-      labs(title = "UFO Sightings Over Time by Year and Time of Day",
-           x = "Year", y = "Count") +
-      theme_minimal() 
+  #b. graphing bar graph for time
+  output$ufo_plot_bar_graph <- renderPlotly({
+    data <- filtered_data()
+    
+    summary_table <- data %>% 
+      group_by(year, time_of_day) %>%
+      summarize(count = n(), .groups = 'drop')
+    
+    average_count <- mean(summary_table$count)
+    p <- plot_ly(data = summary_table, x=~year, y=~count, type='bar', color = ~time_of_day,
+                 colors = c('Morning' = '#FFD700', 'Day' = '#7FFF00', 'Night' = '#1E90FF'),
+                 text = ~paste("Count: ", count),
+                 hoverinfo = 'text+x+y') %>%
+      layout(title ="UFO Sightings Over Time by Year and Time of Day",
+             xaxis = list(title="Year"),
+             yaxis = list(title="Count"),
+             barmode = 'group',
+             annotations = list(
+               x = 0.5,
+               y = -0.15,
+               xref = 'paper',
+               yref = 'paper',
+               text = sprintf("Average count: %.2f", average_count),
+               showarrow = FALSE,
+               font = list(size=12)
+               ),
+             margin = list(b=100))
+        return(p)
   })
 
+  #c. plotting map
  output$ufo_map_by_time <- renderLeaflet({
     leaflet() %>%
       addTiles() %>%
