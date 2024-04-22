@@ -1,0 +1,68 @@
+---
+title: "test wordcloud"
+output: html_document
+date: "2024-04-19"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '~/Downloads/archive')
+```
+
+```{r}
+library(dplyr)
+library(stringr)
+library(tidytext) # for unnest_tokens function and get_sentiments
+library(wordcloud2)
+```
+
+```{r}
+# Load UFO sighting data
+ufo_data <- read.csv("scrubbed.csv")
+```
+
+```{r}
+regex <- "&#\\d{1,}"
+
+ufo_data_clean_comments <- ufo_data %>% 
+                    mutate(
+                      comments = lapply(comments, 
+                                                function(og_comment) {
+                                                  gsub(regex, "", og_comment)
+                                                })
+                    )
+```
+
+```{r}
+ufo_data_clean_comments %>% arrange(datetime)
+```
+```{r}
+ufo_data_clean_comments %>% mutate(
+                              year = as.numeric(format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%Y"))
+                            )
+```
+
+
+```{r}
+# get frequencies of words
+# reference: https://www.jumpingrivers.com/blog/r-clickable-wordcloud-javascript-shiny/, https://www.rdocumentation.org/packages/tidytext/versions/0.1.9/topics/unnest_tokens
+
+word_counts <- ufo_data_clean_comments %>%
+  unnest_tokens("word", comments) %>%
+  # remove common prepositions and articles
+  filter(!(word %in% c("in", "and", "of", "from", "the", "to", "i", "it", "a", "an", "on", "at", "by", "like", "quot", "was", "is", "we"))) %>%
+  # remove pure numbers
+  filter(!grepl("\\d{1,}", word)) %>% 
+  count(word, name = "count")
+```
+
+```{r}
+threshold = 3000
+# https://cran.r-project.org/web/packages/wordcloud2/vignettes/wordcloud.html
+wordcloud2(data = word_counts %>% filter(count > threshold))
+```
+
+
+```{r}
+word_counts %>% arrange(desc(count))
+```
