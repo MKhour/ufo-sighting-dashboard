@@ -102,7 +102,15 @@ state_server <- function(input, output, session) {
   })
 }
 
+ui <- fluidPage(
+  state_ui("1")
+)
+
+server <- function(input, output, session) {
+  callModule(state_server, "1")
+}
+
 # Run the application
-shinyApp(ui = state_ui, server = state_server)
+shinyApp(ui = ui, server = server)
 
 

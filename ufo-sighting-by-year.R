@@ -175,7 +175,16 @@ sightings_by_time_server <- function(input, output, session) {
   
 }
 
-shinyApp(ui = sightings_by_time_ui, server = sightings_by_time_server)
+
+ui <- fluidPage(
+  sightings_by_time_ui("1")
+)
+
+server <- function(input, output, session) {
+  callModule(sightings_by_time_server, "1")
+}
+
+shinyApp(ui = ui, server = server)
 
 
 

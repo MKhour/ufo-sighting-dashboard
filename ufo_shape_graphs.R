@@ -97,4 +97,11 @@ shape_server <- function(input, output, session) {
   })
 }
 
-shinyApp(ui = shape_ui, server = shape_server)
+ui <- fluidPage(
+  shape_ui("1")
+)
+
+server <- function(input, output, session) {
+  callModule(shape_server, "1")
+}
+shinyApp(ui = ui, server = server)

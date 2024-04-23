@@ -83,5 +83,14 @@ word_server <- function(input, output, session) {
   
 }
 
+ui <- fluidPage(
+  word_ui("1")
+)
+
+server <- function(input, output, session) {
+  callModule(word_server, "1")
+}
 # Run the application 
-shinyApp(ui = word_ui, server = word_server)
+shinyApp(ui = ui, server = server)
+
+
