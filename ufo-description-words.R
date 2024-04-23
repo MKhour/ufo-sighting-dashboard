@@ -6,56 +6,50 @@ library(stringr)
 library(tidytext) # for unnest_tokens function
 library(wordcloud2)
 
-setwd('~/Downloads/archive')
+#setwd('~/Downloads/archive')
 
 # Load UFO sighting data
-ufo_data <- read.csv("scrubbed.csv")
+#ufo_data <- read.csv("scrubbed.csv")
+#setwd('C:/Users/Kyle Tran/Downloads')
+#ufo_data = read.csv("ufoData.csv")
 
-regex <- "&#\\d{1,}"
+#regex <- "&#\\d{1,}"
 
-ufo_data_clean_comments <- ufo_data %>% 
-  mutate(
-    comments = lapply(comments, 
-                      function(og_comment) {
-                        gsub(regex, "", og_comment)
-                      }),
-    year = as.numeric(format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%Y"))
-  )
+#ufo_data_clean_comments <- ufo_data %>% 
+#  mutate(
+#    comments = lapply(comments, 
+#                      function(og_comment) {
+#                        gsub(regex, "", og_comment)
+#                      }),
+#    year = as.numeric(format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%Y"))
+#  )
 
 # Define UI for application
-ui <- fluidPage(
-  theme = shinytheme("united"),
-  navbarPage(
-    title = "UFO Sighting Dashboard",
-    tabPanel("Sighting Locations"),
-    tabPanel("Sightings by Time"),
-    tabPanel("UFO Types"),
-    tabPanel("Sighting Descriptions",
-             titlePanel("Descriptions of UFO Sightings"),
-             p("The word cloud below shows words that commonly appear in descriptions of UFO sightings."),
-             p("Note that due to the small number of reported UFOs from before 1960, the minimum occurrence threshold may need to be decreased for any words to be displayed in the plot."),
-             hr(),
-             sidebarLayout(
-               sidebarPanel(
-                 sliderInput("threshold",
-                             "Minimum occurence of word:",
-                             min = 0, max = 10000, value = 1000, step = 100),
-                 sliderInput("year_range",
-                             "Year range:",
-                             min = 1910, max = 2014, value = c(1960, 2014)),
+word_ui <- function(id) { 
+  ns <- NS(id)
+  fluidPage(
+  titlePanel("Descriptions of UFO Sightings"),
+  p("The word cloud below shows words that commonly appear in descriptions of UFO sightings."),
+  p("Note that due to the small number of reported UFOs from before 1960, the minimum occurrence threshold may need to be decreased for any words to be displayed in the plot."),
+  hr(),
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput(ns("threshold"),
+                  "Minimum occurence of word:",min = 0, max = 10000, value = 1000, step = 100),
+      sliderInput(ns("year_range"),
+                    "Year range:",min = 1910, max = 2014, value = c(1960, 2014)),
                ),
-               mainPanel(
-                 wordcloud2Output('word_cloud')
-                 # textOutput("debug")
-                 # tableOutput('comment_table')
-               )
-             )
-    ),
+      mainPanel(
+        (wordcloud2Output(ns('word_cloud')))
+        # textOutput(ns("debug"))
+        # tableOutput(ns('comment_table'))
+      )
   )
-)
+)}
+
 
 # Define server logic
-server <- function(input, output) {
+word_server <- function(input, output, session) {
   
   word_counts <- reactive({
     req(input$year_range)
@@ -83,11 +77,11 @@ server <- function(input, output) {
     wordcloud2(data = word_counts())
   })
   
-  output$comment_table <- renderTable({
-    return(head(ufo_data_clean_comments,10))
-  })
+  #output$comment_table <- renderTable({
+   # return(head(ufo_data_clean_comments,10))
+  #})
   
 }
 
 # Run the application 
-shinyApp(ui = ui, server = server)
+shinyApp(ui = word_ui, server = word_server)

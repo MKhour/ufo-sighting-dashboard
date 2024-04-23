@@ -4,49 +4,53 @@ library(dplyr)
 library(DT)
 
 # Set the working directory
-setwd("~/Documents/DS_2003/Final Project/archive (2)")
+#setwd("~/Documents/DS_2003/Final Project/archive (2)")
 
 # Load UFO sighting data
-ufo_data <- read.csv("ufo_scrubbed.csv")
+#ufo_data <- read.csv("ufo_scrubbed.csv")
+#setwd('C:/Users/Kyle Tran/Downloads')
+#ufo_data = read.csv("ufoData.csv")
 
 # Remove states with empty labels
-ufo_data <- ufo_data[!ufo_data$state %in% c("", " "), ]
+#ufo_data <- ufo_data[!ufo_data$state %in% c("", " "), ]
 
 # Convert latitude and longitude to numeric
-ufo_data$latitude <- as.numeric(as.character(ufo_data$latitude))
-ufo_data$longitude <- as.numeric(as.character(ufo_data$longitude))
+#ufo_data$latitude <- as.numeric(as.character(ufo_data$latitude))
+#ufo_data$longitude <- as.numeric(as.character(ufo_data$longitude))
 
 # Get unique states and their counts
-state_counts <- ufo_data %>%
-  group_by(state) %>%
-  summarise(count = n()) %>%
-  arrange(desc(count))
+#state_counts <- ufo_data %>%
+#  group_by(state) %>%
+#  summarise(count = n()) %>%
+#  arrange(desc(count))
 
 # Get top 5 states with the most UFO sightings
-top_states <- head(state_counts, 5)
+#top_states <- head(state_counts, 5)
 
 # Sort unique states alphabetically for dropdown menu
-unique_states <- sort(unique(ufo_data$state))
+#unique_states <- sort(unique(ufo_data$state))
 
 # Define UI
-ui <- fluidPage(
+state_ui <- function(id) {
+  ns <- NS(id)
+  fluidPage(
   titlePanel("UFO Sightings in the United States"),
   sidebarLayout(
     sidebarPanel(
-      selectInput("state", "Select State:", choices = c("Please select state", unique_states)),
+      selectInput(ns("state"), "Select State:", choices = c("Please select state", unique_states)),
       h4("Number of Sightings in Selected State:"),
-      textOutput("selected_state_count"),
+      textOutput(ns("selected_state_count")),
       h4("Top States with Most UFO Sightings:"),
-      dataTableOutput("top_states_table")
+      dataTableOutput(ns("top_states_table"))
     ),
     mainPanel(
-      leafletOutput("map")
+      leafletOutput(ns("map"))
     )
   )
-)
+)}
 
 # Define server logic
-server <- function(input, output) {
+state_server <- function(input, output, session) {
   
   # Filter UFO data based on selected state
   filtered_data <- reactive({
@@ -99,6 +103,6 @@ server <- function(input, output) {
 }
 
 # Run the application
-shinyApp(ui = ui, server = server)
+shinyApp(ui = state_ui, server = state_server)
 
 

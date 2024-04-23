@@ -20,6 +20,19 @@ ufo_data$duration <- as.numeric(as.character(ufo_data$duration))
 ufo_data$latitude <- as.numeric(ufo_data$latitude)
 ufo_data$longitude <- as.numeric(ufo_data$longitude)
 
+
+regex <- "&#\\d{1,}"
+
+ufo_data_clean_comments <- ufo_data %>% 
+  mutate(
+    comments = lapply(comments, 
+                      function(og_comment) {
+                        gsub(regex, "", og_comment)
+                      }),
+    year = as.numeric(format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%Y"))
+  )
+
+
 #0 - Extracting Latitude and Longitude and Using Spatial Analysis to Clean Data
 #a. making coordinates data frame
 latitude = as.numeric(ufo_data$latitude)
@@ -55,6 +68,19 @@ ufo_data$time_of_day <- case_when(
   TRUE ~ "Night"
 )
 
+# Get unique states and their counts
+state_counts <- ufo_data %>%
+  group_by(state) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+
+# Get top 5 states with the most UFO sightings
+top_states <- head(state_counts, 5)
+
+# Sort unique states alphabetically for dropdown menu
+unique_states <- sort(unique(ufo_data$state))
+
+###################################################################################################
 
 #2. Creating UI for Page
 sightings_by_time_ui <- function(id) {
