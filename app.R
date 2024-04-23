@@ -4,7 +4,7 @@ library(shinythemes)
 source('ufo_shape_graphs.R')
 source('ufo-description-words.R')
 source('ufo_sighting_bystate.R')
-source('ufo-sighting-by-year.R')
+source('ufo-sighting-by-year-original.R')
 
 
 # Define UI for application
