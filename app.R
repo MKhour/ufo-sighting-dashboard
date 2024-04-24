@@ -4,7 +4,9 @@ library(shinythemes)
 source('ufo_shape_graphs.R')
 source('ufo-description-words.R')
 source('ufo_sighting_bystate.R')
-source('ufo-sighting-by-year-original.R')
+source('introduction-tab.R')
+source('conclusion-tab.R')
+source('ufo-sighting-by-year-and-shape.R')
 
 
 # Define UI for application
@@ -13,12 +15,11 @@ ui <- fluidPage(
   navbarPage(
     id = "main_navbar",
     title = "UFO Sighting Dashboard",
-    tabPanel("Introduction", value = "intro_tab"),
+    tabPanel("Introduction", value = "intro_tab", intro_ui()),
     tabPanel("Sighting Locations", value = "loc_tab", state_ui("4")),
     tabPanel("UFO Types & Sightings by Time", value = "time_tab", sightings_by_time_ui("1")),
-    #tabPanel("UFO Types", value = "type_tab", shape_ui("2")),
     tabPanel("Sightings Descriptions", value = "word_tab", word_ui("3")),
-    tabPanel("Conclusion", value = "conclusion_tab",)
+    tabPanel("Conclusion", value = "conclusion_tab", conclusion_ui())
     )
 )
 

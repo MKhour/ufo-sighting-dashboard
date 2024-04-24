@@ -35,18 +35,18 @@ ui <- fluidPage(
   titlePanel("UFO Sightings in the United States"),
   navbarPage("",
     tabPanel("View Map and States",
-      HTML("<p>Select a state from the dropdown menu to explore more about UFO sightings reported in that state.</p>"), # New text added
-      sidebarLayout(
-        sidebarPanel(
-          selectInput("state", "Select State:", choices = c("Please select state", unique_states)),
-          h4("Number of Sightings in Selected State:"),
-          textOutput("selected_state_count"),
-          h4("Top States with Most UFO Sightings:"),
-          dataTableOutput("top_states_table")
-        ),
-        mainPanel(
-          leafletOutput("map"),
-          HTML("<p><strong>Zoom into the map to select points and learn more about that sighting.</strong></p>") # New caption added
+     HTML("<p>Select a state from the dropdown menu to explore more about UFO sightings reported in that state.</p>"), # New text added
+     sidebarLayout(
+       sidebarPanel(
+         selectInput("state", "Select State:", choices = c("Please select state", unique_states)),
+         h4("Number of Sightings in Selected State:"),
+         textOutput("selected_state_count"),
+         h4("Top States with Most UFO Sightings:"),
+         dataTableOutput("top_states_table")
+       ),
+       mainPanel(
+         leafletOutput("map"),
+         HTML("<p><strong>Zoom into the map to select points and learn more about that sighting.</strong></p>") # New caption added
         )
      )
     ),
@@ -70,7 +70,7 @@ ui <- fluidPage(
 )
 
 # Define server logic
-server <- function(input, output, session) {
+server <- function(input, output) {
 
   output$searchUI <- renderUI({
     if (input$city == "Search") {
@@ -126,7 +126,7 @@ server <- function(input, output, session) {
       paste("Total sightings in", input$state, ":", selected_state_count())
     }
   })
-  
+
   # ==== City logic ==============================================================
   
   
