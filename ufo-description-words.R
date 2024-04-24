@@ -28,6 +28,7 @@ word_ui <- function(id) {
   ),
   hr(),
   h3("Sentiment Analysis"),
+  p("Use the slider on the left to explore how sentiment (positive/negative feeling) and emotions surrounding UFO sightings have changed over time."),
   sidebarLayout(
     sidebarPanel(
       sliderInput(ns("sentiment_year_range"),
