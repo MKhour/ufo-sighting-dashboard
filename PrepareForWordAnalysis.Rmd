@@ -1,0 +1,70 @@
+---
+title: "Prepare Data for Word Analysis"
+output: html_document
+date: "2024-04-19"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '~/Downloads/archive')
+```
+
+```{r}
+library(dplyr)
+library(stringr)
+library(tidytext) # for unnest_tokens function and get_sentiments
+library(wordcloud2)
+library(tm)
+library(syuzhet)
+library(data.table)
+```
+
+## Load Data
+```{r}
+# Load UFO sighting data
+ufo_data <- read.csv("scrubbed.csv")
+```
+
+## Clean Data
+```{r}
+regex <- "&#\\d{1,}"
+
+ufo_data_clean_comments <- ufo_data %>% 
+  mutate(
+    Description = unlist(lapply(comments, 
+                      function(og_comment) {
+                        gsub(regex, "", og_comment)
+                      })),
+    Year = as.numeric(format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%Y")),
+    Date = format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%m/%d/%Y")
+  ) %>%
+  rename(
+    State = state,
+    Country = country
+  )
+
+```
+
+## Do Sentiment Analysis
+
+#https://www.r-bloggers.com/2021/05/sentiment-analysis-in-r-3/ 
+```{r}
+formatted_data <- iconv(as.character(ufo_data_clean_comments$Description))
+```
+
+```{r}
+sentiments <- get_nrc_sentiment(formatted_data)
+```
+
+```{r}
+comment_and_sentiment_data <- cbind(ufo_data_clean_comments, test_reading) %>% select(-X)
+```
+
+## Save Data
+```{r}
+save_df <- comment_and_sentiment_data
+```
+
+```{r}
+write.csv(save_df, "sentiments_and_comments.csv")
+```
