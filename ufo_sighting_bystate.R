@@ -35,6 +35,10 @@ state_ui <- function(id) {
   ns <- NS(id)
   fluidPage(
   titlePanel("UFO Sightings in the United States"),
+  p("On this page, we focused our analysis on the frequency of UFO sightings across the 50 states. As
+    you will see below, we have an interactive map that allows you to see
+    the UFO sightings across different states. Note, when you zoom in close enough,
+    you can click on a point to learn more about a specifc datapoint."),
   sidebarLayout(
     sidebarPanel(
       selectInput(ns("state"), "Select State:", choices = c("Please select state", unique_states)),
@@ -102,15 +106,15 @@ state_server <- function(input, output, session) {
   })
 }
 
-ui <- fluidPage(
-  state_ui("1")
-)
+#ui <- fluidPage(
+#  state_ui("1")
+#)
 
-server <- function(input, output, session) {
-  callModule(state_server, "1")
-}
+#server <- function(input, output, session) {
+#  callModule(state_server, "1")
+#}
 
 # Run the application
-shinyApp(ui = ui, server = server)
+#shinyApp(ui = ui, server = server)
 
 

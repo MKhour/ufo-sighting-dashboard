@@ -1,24 +1,27 @@
 library(shiny)
 
-ui <- navbarPage(
-  "My Shiny App",
-  tabPanel(
-    "Introduction",
+intro_ui <- function() {
+  fluidPage(
+    h1("Introduction", style="text-align: center; color: green;"),
+    p("For our final project, we chose to do an analysis on UFO sightings. We gathered our data from Kaggle, with the 
+        data source from the National UFO Reporting Center.", style="text-align: center;"),
     mainPanel(
-      h1("UFO Sightings", style = "color: green; text-align: center;"),
-      p("introduction header"),
-      h3("bullet points:"),
+      h3("The Dataset"),
       tags$ul(
-        tags$li("insert"),
-        tags$li("insert"),
-        tags$li(strong("insert"))
+        tags$li("Dataset: https://www.kaggle.com/datasets/NUFORC/ufo-sightings"),
+        tags$li("Utilized the cleaned dataset which had no missing sighting times and was roughly 8% smaller than the raw dataset"),
+        tags$li("Includes 70,000 sightings ranging from 1910 to 2014")
       ),
-      h4("insert data"),
-      p("insert data"),
+      h3("Our 3 Questions:"),
+      tags$ul(
+        tags$li("In what areas are UFO sightings most common?"),
+        tags$li("How did the number of sightings change over time? In addition, what is the correlation between the duration of a sighting and its shape?"),
+        tags$li("What words/topics come up frequently in descriptions of UFO sightings?")
+      ),
       img(src = "ufo2.jpg", height = 200, style = "display: block; margin: 0 auto;")
     )
-  )
-)
+)}
+
 
 server <- function(input, output, session) {
   # just leaving blank as there is no server logic required
