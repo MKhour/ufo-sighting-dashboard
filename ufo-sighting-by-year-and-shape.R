@@ -26,32 +26,15 @@ ufo_data$longitude <- as.numeric(ufo_data$longitude)
 
 ufo_with_sentiment_data <- read.csv("sentiments_and_comments.csv")
 
-#0 - Extracting Latitude and Longitude and Using Spatial Analysis to Clean Data
-#a. making coordinates data frame
-latitude = as.numeric(ufo_data$latitude)
-longitude = as.numeric(ufo_data$longitude)
-coordinates <- data.frame(latitude, longitude)
-coordinates <- coordinates %>% 
-  filter(!is.na(latitude) & !is.na(longitude))
-coordinates <- st_as_sf(coordinates, coords = c("longitude", "latitude"), crs = 4326)
-
-#b. getting state data from package to compare state boundaries
-state_data <- states(cb = TRUE, class = "sf")
-state_data <- st_transform(state_data, st_crs(coordinates))
-
 #c. comparing the coordinates
-results <- st_join(coordinates, state_data, join = st_within)
-coordinates <- as.data.frame(st_coordinates(results$geometry))
-results <- results %>%
-  mutate(latitude = coordinates$Y,
-         longitude = coordinates$X)
-results <- results %>% 
-  select(latitude, longitude, state_abb = STUSPS)
+# results <- as.data.frame(load("results.Rda"))
+results <- readRDS(file="results.Rda")
+# View(results)
 
 ufo_data <- inner_join(ufo_data, results, by = c("latitude", "longitude")) %>% distinct()
 ufo_data$state = toupper(ufo_data$state)
 ufo_data <- ufo_data %>% filter(state == state_abb | (country != "us" & country != ""))
-View(ufo_data)
+# View(ufo_data)
 
 #Extracting Years/Times From DateTime
 ufo_data$year <- year(ufo_data$datetime)

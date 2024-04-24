@@ -1,0 +1,72 @@
+---
+title: "PreprocessCoordinates"
+output: html_document
+date: "2024-04-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '~/Downloads/archive')
+```
+
+```{r}
+library(shiny)
+library(leaflet)
+library(lubridate)
+library(sf)
+library(tigris)
+library(plotly)
+library(dplyr)
+library(ggplot2)
+options(tigris_use_cache = TRUE)
+```
+
+```{r}
+ufo_data <- read.csv("scrubbed.csv")
+
+ufo_data$datetime <- as.POSIXct(ufo_data$datetime, format = "%m/%d/%Y %H:%M", errors="coerce")
+ufo_data <- ufo_data[!is.na(ufo_data$datetime), ]
+ufo_data <- ufo_data[!ufo_data$state %in% c("", " "), ]
+ufo_data <- ufo_data %>% rename(duration = duration..seconds.)
+ufo_data$shape <- ifelse(ufo_data$shape == "", "unknown", ufo_data$shape)
+ufo_data$duration <- as.numeric(as.character(ufo_data$duration))
+ufo_data$latitude <- as.numeric(ufo_data$latitude)
+ufo_data$longitude <- as.numeric(ufo_data$longitude)
+```
+
+```{r}
+#0 - Extracting Latitude and Longitude and Using Spatial Analysis to Clean Data
+#a. making coordinates data frame
+latitude = as.numeric(ufo_data$latitude)
+longitude = as.numeric(ufo_data$longitude)
+coordinates <- data.frame(latitude, longitude)
+coordinates <- coordinates %>% 
+  filter(!is.na(latitude) & !is.na(longitude))
+coordinates <- st_as_sf(coordinates, coords = c("longitude", "latitude"), crs = 4326)
+
+#b. getting state data from package to compare state boundaries
+state_data <- states(cb = TRUE, class = "sf")
+state_data <- st_transform(state_data, st_crs(coordinates))
+
+#c. comparing the coordinates
+results <- st_join(coordinates, state_data, join = st_within)
+coordinates <- as.data.frame(st_coordinates(results$geometry))
+results <- results %>%
+  mutate(latitude = coordinates$Y,
+         longitude = coordinates$X)
+results <- results %>% 
+  select(latitude, longitude, state_abb = STUSPS)
+```
+
+```{r}
+final_df <- as.data.frame(results)%>%select(-geometry)
+```
+
+```{r}
+final_df
+```
+
+```{r}
+# save(final_df, file="results.Rda")
+saveRDS(final_df, file="results.Rda")
+```
