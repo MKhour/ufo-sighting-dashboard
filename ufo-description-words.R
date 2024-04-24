@@ -6,24 +6,6 @@ library(stringr)
 library(tidytext) # for unnest_tokens function
 library(wordcloud2)
 
-#setwd('~/Downloads/archive')
-
-# Load UFO sighting data
-#ufo_data <- read.csv("scrubbed.csv")
-#setwd('C:/Users/Kyle Tran/Downloads')
-#ufo_data = read.csv("ufoData.csv")
-
-#regex <- "&#\\d{1,}"
-
-#ufo_data_clean_comments <- ufo_data %>% 
-#  mutate(
-#    comments = lapply(comments, 
-#                      function(og_comment) {
-#                        gsub(regex, "", og_comment)
-#                      }),
-#    year = as.numeric(format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%Y"))
-#  )
-
 # Define UI for application
 word_ui <- function(id) { 
   ns <- NS(id)
@@ -36,7 +18,7 @@ word_ui <- function(id) {
   sidebarLayout(
     sidebarPanel(
       sliderInput(ns("threshold"),
-                  "Minimum occurence of word:", min = 0, max = 10000, value = 1000, step = 100),
+                  "Minimum occurence of word:", min = 0, max = 10000, value = 2000, step = 100),
       sliderInput(ns("year_range"),
                     "Year range:", min = 1910, max = 2014, value = c(1960, 2014)),
                ),
@@ -45,9 +27,19 @@ word_ui <- function(id) {
       )
   ),
   hr(),
+  h3("Sentiment Analysis"),
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput(ns("sentiment_year_range"),
+                  "Year range:", min = 1910, max = 2014, value = c(1960, 2014)),
+    ),
+    mainPanel(
+      plotOutput(ns("sentiment_bar_graph"))
+    )
+  ),
+  hr(),
   h3("Description Search"),
-  p("All UFO sighting descriptions are displayed in the table below."),
-  p("You may search for key words via the bar to the right."),
+  p("All UFO sighting descriptions are displayed below. Search for key words via the bar to the right."),
   DT::dataTableOutput(ns('comment_table'))
 )}
 
@@ -59,7 +51,7 @@ word_server <- function(input, output, session) {
     req(input$year_range)
     req(input$threshold)
     
-    filtered_years <- ufo_data_clean_comments %>%
+    filtered_years <- ufo_with_sentiment_data %>%
       filter(Year >= as.numeric(input$year_range[1]) & Year <= as.numeric(input$year_range[2]))
     
     all_words <- unnest_tokens(filtered_years, "word", Description) 
@@ -81,11 +73,48 @@ word_server <- function(input, output, session) {
     wordcloud2(data = word_counts())
   })
   
+  sentiment_counts <- reactive({
+    req(input$sentiment_year_range)
+    
+    filtered_years <- ufo_with_sentiment_data %>%
+      filter(Year >= as.numeric(input$sentiment_year_range[1]) & Year <= as.numeric(input$sentiment_year_range[2])) %>%
+      select(anger, anticipation, disgust, fear, joy, sadness, surprise, trust, negative, positive)
+    
+    df <- data.frame(colSums(filtered_years))
+    sentiment_count_table <- df %>%
+      mutate(
+        sentiment = rownames(df),
+        count = as.integer(colSums.filtered_years.)
+      ) %>% select(sentiment, count)
+    
+    return(sentiment_count_table)
+  })
+  
+  output$sentiment_bar_graph <- renderPlot({
+    
+    emotions_plot <- ggplot(data=sentiment_counts(), aes(x=sentiment, y=count)) +
+      geom_bar(stat="identity") +
+      coord_flip()
+    
+    return(emotions_plot)
+  })
+  
+  output$old_sentiment_bar_graph <- renderPlot({
+    data <- sentiment_counts()
+    # Render a barplot
+    barplot(data$count, 
+            horiz=TRUE,
+            cex.names = 0.7,
+            las = 1,
+            main = "Sentiments of Descriptions", xlab = "Counts")
+  })
+  
   output$comment_table <- DT::renderDataTable(DT::datatable({
-    ufo_data_clean_comments %>%
+    ufo_with_sentiment_data %>%
       arrange(Year) %>%
       select(Date, State, Country, Description)
   }), rownames = FALSE)
+  
   
 }
 

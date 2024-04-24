@@ -24,23 +24,7 @@ ufo_data$duration <- as.numeric(as.character(ufo_data$duration))
 ufo_data$latitude <- as.numeric(ufo_data$latitude)
 ufo_data$longitude <- as.numeric(ufo_data$longitude)
 
-
-regex <- "&#\\d{1,}"
-
-ufo_data_clean_comments <- ufo_data %>% 
-  mutate(
-    Description = lapply(comments, 
-                         function(og_comment) {
-                           gsub(regex, "", og_comment)
-                         }),
-    Year = as.numeric(format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%Y")),
-    Date = format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%m/%d/%Y")
-  ) %>%
-  rename(
-    State = state,
-    Country = country
-  )
-
+ufo_with_sentiment_data <- read.csv("sentiments_and_comments.csv")
 
 #0 - Extracting Latitude and Longitude and Using Spatial Analysis to Clean Data
 #a. making coordinates data frame

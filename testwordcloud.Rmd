@@ -45,10 +45,10 @@ regex <- "&#\\d{1,}"
 
 ufo_data_clean_comments <- ufo_data %>% 
   mutate(
-    Description = lapply(comments, 
+    Description = unlist(lapply(comments, 
                       function(og_comment) {
                         gsub(regex, "", og_comment)
-                      }),
+                      })),
     Year = as.numeric(format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%Y")),
     Date = format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%m/%d/%Y")
   ) %>%
@@ -58,6 +58,11 @@ ufo_data_clean_comments <- ufo_data %>%
   )
 
 ```
+
+```{r}
+ufo_data_clean_comments
+```
+
 #https://www.r-bloggers.com/2021/05/sentiment-analysis-in-r-3/ 
 ```{r}
 formatted_data <- iconv(as.character(ufo_data_clean_comments$Description))
@@ -82,13 +87,23 @@ ufo_data_clean_comments
 test_reading
 ```
 ```{r}
-comment_and_sentiment_data <- cbind(ufo_data_clean_comments, test_reading)
+comment_and_sentiment_data <- cbind(ufo_data_clean_comments, test_reading) %>% select(-X)
 ```
 
 ```{r}
-comment_and_sentiment_data
+save_df <- comment_and_sentiment_data
 ```
+
 ```{r}
+save_df
+```
+
+```{r}
+write.csv(save_df, "sentiments_and_comments.csv")
+```
+
+```{r}
+# https://cran.r-project.org/web/packages/syuzhet/vignettes/syuzhet-vignette.html 
 barplot(
   sort(colSums(prop.table(select(test_reading, -X, -negative, -positive)))), 
   horiz = TRUE, 
@@ -115,15 +130,55 @@ p
 ```
 
 ```{r}
-sentiment_counts <- colSums(select(test_reading, -X, -negative, -positive))
+ufo_with_sentiment_data <- read.csv("sentiments_and_comments.csv")
+```
+
+```{r}
+filtered_years <- ufo_with_sentiment_data %>%
+      filter(Year >= 1910 & Year <= 2014) %>%
+      select(anger, anticipation, disgust, fear, joy, sadness, surprise, trust, negative, positive)
+```
+
+```{r}
+filtered_years
+```
+```{r}
+df <- data.frame(colSums(filtered_years))
+
+df
+```
+```{r}
+sentiment_count_table <- df %>%
+      mutate(
+        sentiment = rownames(df),
+        count = as.integer(colSums.filtered_years.)
+      ) %>% select(sentiment, count)
+
+sentiment_count_table
+```
+
+```{r}
+ufo_sentiments_selected <- ufo_with_sentiment_data %>% select(anger, anticipation, disgust, fear, joy, sadness, surprise, trust, negative, positive)
+
+ufo_sentiments_selected
+```
+```{r}
+sentiment_counts <- colSums(ufo_sentiments_selected)
 
 sentiment_counts
 ```
 
 ```{r}
-tp <- data.frame(sentiment_counts) %>%
+sentiment_counts <- colSums(select(ufo_sentiments_selected, -negative, -positive))
+
+sentiment_counts
+```
+
+```{r}
+df <- data.frame(sentiment_counts)
+sentiment_count_table <- df %>%
   mutate(
-    sentiment = rownames(tp),
+    sentiment = rownames(df),
     count = as.integer(sentiment_counts)
   ) %>% select(sentiment, count)
 tp
