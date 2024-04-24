@@ -3,22 +3,18 @@ library(leaflet)
 library(dplyr)
 library(DT)
 
-# Set the working directory
 #setwd("~/Documents/DS_2003/Final Project/archive (2)")
 
-# Load UFO sighting data
 #ufo_data <- read.csv("ufo_scrubbed.csv")
 #setwd('C:/Users/Kyle Tran/Downloads')
 # ufo_data = read.csv("ufoData.csv")
 
-# Remove states with empty labels
-# ufo_data <- ufo_data[!ufo_data$state %in% c("", " "), ]
 
-# Convert latitude and longitude to numeric
-# ufo_data$latitude <- as.numeric(as.character(ufo_data$latitude))
-# ufo_data$longitude <- as.numeric(as.character(ufo_data$longitude))
+#ufo_data <- ufo_data[!ufo_data$state %in% c("", " "), ]
 
-# Get unique states and their counts
+#ufo_data$latitude <- as.numeric(as.character(ufo_data$latitude))
+#ufo_data$longitude <- as.numeric(as.character(ufo_data$longitude))
+
 #state_counts <- ufo_data %>%
 #  group_by(state) %>%
 #  summarise(count = n()) %>%
@@ -27,65 +23,63 @@ library(DT)
 # Get top 5 states with the most UFO sightings
 #top_states <- head(state_counts, 5)
 
-# Sort unique states alphabetically for dropdown menu
-unique_states <- sort(unique(ufo_data$state))
-
 city_counts <- ufo_data %>%
   group_by(city) %>%
   summarize(count = n())
 
+# Sort unique states alphabetically
+#unique_states <- sort(unique(ufo_data$state))
+
 # Define UI
-state_ui <- function(id) {
-  ns <- NS(id)
-  fluidPage(
+ui <- fluidPage(
   titlePanel("UFO Sightings in the United States"),
   navbarPage("",
     tabPanel("View Map and States",
+      HTML("<p>Select a state from the dropdown menu to explore more about UFO sightings reported in that state.</p>"), # New text added
       sidebarLayout(
         sidebarPanel(
-          selectInput(ns("state"), "Select State:", choices = c("Please select state", unique_states)),
+          selectInput("state", "Select State:", choices = c("Please select state", unique_states)),
           h4("Number of Sightings in Selected State:"),
-          textOutput(ns("selected_state_count")),
+          textOutput("selected_state_count"),
           h4("Top States with Most UFO Sightings:"),
-          dataTableOutput(ns("top_states_table"))
+          dataTableOutput("top_states_table")
         ),
         mainPanel(
-          leafletOutput(ns("map"))
+          leafletOutput("map"),
+          HTML("<p><strong>Zoom into the map to select points and learn more about that sighting.</strong></p>") # New caption added
         )
      )
     ),
     tabPanel("Compare Cities",
        sidebarLayout(
          sidebarPanel(
-           selectInput(ns('city'), "View Cities By:", choices = c("Descending Order", "Ascending Order", Search = "Search")),
+           selectInput('city', "View Cities By:", choices = c("Descending Order", "Ascending Order", Search = "Search")),
            h4("Cities and the Number of UFO Sightings"),
-           numericInput(ns("page"), "Page Number:", value = 1, min = 1, max = nrow(city_counts)),
-           uiOutput(ns("searchUI")),
+           numericInput("page", "Page Number:", value = 1, min = 1, max = nrow(city_counts)),
+           uiOutput("searchUI"),
 
-           dataTableOutput(ns("current_cities_table")),
+           dataTableOutput("current_cities_table"),
          ),
          mainPanel(
-           plotOutput(ns("city_bar_chart")),
+           plotOutput("city_bar_chart"),
            p("This is a bar graph with the total number of UFO spottings per city")
          )
        )
     )
   )
-)}
+)
 
 # Define server logic
-state_server <- function(input, output, session) {
-  ns <- session$ns
-  
+server <- function(input, output, session) {
+
   output$searchUI <- renderUI({
     if (input$city == "Search") {
-      textInput(ns("search"), "Search City:", "")
+      textInput("search", "Search City:", "")
     } else {
       NULL
     }
   })
   
-  # Filter UFO data based on selected state
   filtered_data <- reactive({
     if (input$state == "Please select state") {
       return(ufo_data)
@@ -94,12 +88,11 @@ state_server <- function(input, output, session) {
     }
   })
   
-  # Number of sightings for selected state
   selected_state_count <- reactive({
     nrow(filtered_data())
   })
   
-  # Render leaflet map
+  # Create map
   output$map <- renderLeaflet({
     leaflet() %>%
       addTiles() %>%
@@ -113,7 +106,7 @@ state_server <- function(input, output, session) {
                                                    "Comments:", comments)))
   })
   
-  # Render top states with most UFO sightings as a datatable
+  # Render top states with most UFO sightings
   output$top_states_table <- renderDataTable({
     datatable(top_states, 
               options = list(
@@ -201,14 +194,6 @@ state_server <- function(input, output, session) {
     }
     
   })
-}
-
-ui <- fluidPage(
-  state_ui("1")
-)
-
-server <- function(input, output, session) {
-  callModule(state_server, "1")
 }
 
 # Run the application
