@@ -11,7 +11,7 @@ options(tigris_use_cache = TRUE)
 #Cleaning the Data for All of App
 
 # setwd('C:/Users/Kyle Tran/Downloads')
-setwd('~/Downloads/archive')
+# setwd('~/Downloads/archive')
 # ufo_data = read.csv("ufoData.csv")
 ufo_data <- read.csv("scrubbed.csv")
 
@@ -90,8 +90,7 @@ sightings_by_time_ui <- function(id) {
       selectInput(ns("states"), "State", choices = c("All Entries", sort(unique(ufo_data$state)))),
       selectInput(ns("shape_select"), "Select Shape", choices = c("All Shapes",unique(ufo_data$shape))),
       numericInput(ns("min_duration"), "Minimum Duration (seconds)", min = min(ufo_data$duration, na.rm = TRUE), value = min(ufo_data$duration, na.rm = TRUE)),
-      numericInput(ns("max_duration"), "Maximum Duration (seconds)", min = min(ufo_data$duration, na.rm = TRUE), value = max(ufo_data$duration, na.rm = TRUE)),
-      checkboxInput(ns("show_combined"), "Show Total Shape Counts", value = FALSE)
+      numericInput(ns("max_duration"), "Maximum Duration (seconds)", min = min(ufo_data$duration, na.rm = TRUE), value = max(ufo_data$duration, na.rm = TRUE))
     ),
     mainPanel(
       tabsetPanel(
