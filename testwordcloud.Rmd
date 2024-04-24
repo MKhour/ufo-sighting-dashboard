@@ -14,11 +14,18 @@ library(dplyr)
 library(stringr)
 library(tidytext) # for unnest_tokens function and get_sentiments
 library(wordcloud2)
+library(tm)
+library(syuzhet)
+library(data.table)
 ```
 
 ```{r}
 # Load UFO sighting data
 ufo_data <- read.csv("scrubbed.csv")
+```
+
+```{r}
+ufo_data
 ```
 
 ```{r}
@@ -31,6 +38,102 @@ ufo_data_clean_comments <- ufo_data %>%
                                                   gsub(regex, "", og_comment)
                                                 })
                     )
+```
+
+```{r}
+regex <- "&#\\d{1,}"
+
+ufo_data_clean_comments <- ufo_data %>% 
+  mutate(
+    Description = lapply(comments, 
+                      function(og_comment) {
+                        gsub(regex, "", og_comment)
+                      }),
+    Year = as.numeric(format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%Y")),
+    Date = format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%m/%d/%Y")
+  ) %>%
+  rename(
+    State = state,
+    Country = country
+  )
+
+```
+#https://www.r-bloggers.com/2021/05/sentiment-analysis-in-r-3/ 
+```{r}
+formatted_data <- iconv(as.character(ufo_data_clean_comments$Description))
+```
+
+```{r}
+sentiments <- get_nrc_sentiment(formatted_data)
+```
+
+```{r}
+sentiments
+```
+```{r}
+test_reading <- read.csv("sentiments_of_comments.csv")
+```
+
+```{r}
+ufo_data_clean_comments
+```
+
+```{r}
+test_reading
+```
+```{r}
+comment_and_sentiment_data <- cbind(ufo_data_clean_comments, test_reading)
+```
+
+```{r}
+comment_and_sentiment_data
+```
+```{r}
+barplot(
+  sort(colSums(prop.table(select(test_reading, -X, -negative, -positive)))), 
+  horiz = TRUE, 
+  cex.names = 0.7, 
+  las = 1, 
+  main = "Emotions in Sample text", xlab="Percentage")
+
+```
+```{r}
+barplot(
+  sort(colSums(select(test_reading, -X, -negative, -positive))), 
+  horiz = TRUE, 
+  cex.names = 0.7, 
+  las = 1, 
+  main = "Sentiments of Descriptions", xlab="Counts")
+
+```
+```{r}
+p<-ggplot(data=tp, aes(x=sentiment, y=count)) +
+  geom_bar(stat="identity") +
+  coord_flip()
+
+p
+```
+
+```{r}
+sentiment_counts <- colSums(select(test_reading, -X, -negative, -positive))
+
+sentiment_counts
+```
+
+```{r}
+tp <- data.frame(sentiment_counts) %>%
+  mutate(
+    sentiment = rownames(tp),
+    count = as.integer(sentiment_counts)
+  ) %>% select(sentiment, count)
+tp
+```
+```{r}
+wordcloud2(data = tp)
+```
+
+```{r}
+write.csv(sentiments, "sentiments_of_comments.csv")
 ```
 
 ```{r}
@@ -54,6 +157,11 @@ word_counts <- ufo_data_clean_comments %>%
   # remove pure numbers
   filter(!grepl("\\d{1,}", word)) %>% 
   count(word, name = "count")
+```
+
+
+```{r}
+word_counts
 ```
 
 ```{r}

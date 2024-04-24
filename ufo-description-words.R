@@ -29,22 +29,26 @@ word_ui <- function(id) {
   ns <- NS(id)
   fluidPage(
   titlePanel("Descriptions of UFO Sightings"),
+  hr(),
+  h3("Word Cloud"),
   p("The word cloud below shows words that commonly appear in descriptions of UFO sightings."),
   p("Note that due to the small number of reported UFOs from before 1960, the minimum occurrence threshold may need to be decreased for any words to be displayed in the plot."),
-  hr(),
   sidebarLayout(
     sidebarPanel(
       sliderInput(ns("threshold"),
-                  "Minimum occurence of word:",min = 0, max = 10000, value = 1000, step = 100),
+                  "Minimum occurence of word:", min = 0, max = 10000, value = 1000, step = 100),
       sliderInput(ns("year_range"),
-                    "Year range:",min = 1910, max = 2014, value = c(1960, 2014)),
+                    "Year range:", min = 1910, max = 2014, value = c(1960, 2014)),
                ),
       mainPanel(
         (wordcloud2Output(ns('word_cloud')))
-        # textOutput(ns("debug"))
-        # tableOutput(ns('comment_table'))
       )
-  )
+  ),
+  hr(),
+  h3("Description Search"),
+  p("All UFO sighting descriptions are displayed in the table below."),
+  p("You may search for key words via the bar to the right."),
+  DT::dataTableOutput(ns('comment_table'))
 )}
 
 
@@ -56,9 +60,9 @@ word_server <- function(input, output, session) {
     req(input$threshold)
     
     filtered_years <- ufo_data_clean_comments %>%
-      filter(year >= as.numeric(input$year_range[1]) & year <= as.numeric(input$year_range[2]))
+      filter(Year >= as.numeric(input$year_range[1]) & Year <= as.numeric(input$year_range[2]))
     
-    all_words <- unnest_tokens(filtered_years, "word", comments) 
+    all_words <- unnest_tokens(filtered_years, "word", Description) 
     
     word_count_table <- all_words %>%
       # remove common prepositions and articles
@@ -77,9 +81,11 @@ word_server <- function(input, output, session) {
     wordcloud2(data = word_counts())
   })
   
-  #output$comment_table <- renderTable({
-   # return(head(ufo_data_clean_comments,10))
-  #})
+  output$comment_table <- DT::renderDataTable(DT::datatable({
+    ufo_data_clean_comments %>%
+      arrange(Year) %>%
+      select(Date, State, Country, Description)
+  }), rownames = FALSE)
   
 }
 

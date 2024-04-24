@@ -9,10 +9,12 @@ library(ggplot2)
 options(tigris_use_cache = TRUE)
 
 #Cleaning the Data for All of App
-setwd('C:/Users/fletc/Downloads')
-ufo_data = read.csv("scrubbed.csv")
-#setwd('C:/Users/Kyle Tran/Downloads')
-#ufo_data = read.csv("ufoData.csv")
+
+# setwd('C:/Users/Kyle Tran/Downloads')
+setwd('~/Downloads/archive')
+# ufo_data = read.csv("ufoData.csv")
+ufo_data <- read.csv("scrubbed.csv")
+
 ufo_data$datetime <- as.POSIXct(ufo_data$datetime, format = "%m/%d/%Y %H:%M", errors="coerce")
 ufo_data <- ufo_data[!is.na(ufo_data$datetime), ]
 ufo_data <- ufo_data[!ufo_data$state %in% c("", " "), ]
@@ -27,11 +29,16 @@ regex <- "&#\\d{1,}"
 
 ufo_data_clean_comments <- ufo_data %>% 
   mutate(
-    comments = lapply(comments, 
-                      function(og_comment) {
-                        gsub(regex, "", og_comment)
-                      }),
-    year = as.numeric(format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%Y"))
+    Description = lapply(comments, 
+                         function(og_comment) {
+                           gsub(regex, "", og_comment)
+                         }),
+    Year = as.numeric(format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%Y")),
+    Date = format(as.Date(datetime, format="%m/%d/%Y %H:%M"),"%m/%d/%Y")
+  ) %>%
+  rename(
+    State = state,
+    Country = country
   )
 
 
