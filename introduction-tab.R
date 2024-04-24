@@ -2,7 +2,7 @@ library(shiny)
 
 intro_ui <- function() {
   fluidPage(
-    h1("Introduction", style="text-align: center; color: green;"),
+    h1("Introduction", style="text-align: center; color: black;"),
     p("For our final project, we chose to do an analysis on UFO sightings. We gathered our data from Kaggle, with the 
         data source from the National UFO Reporting Center.", style="text-align: center;"),
     mainPanel(
@@ -17,8 +17,7 @@ intro_ui <- function() {
         tags$li("In what areas are UFO sightings most common?"),
         tags$li("How did the number of sightings change over time? In addition, what is the correlation between the duration of a sighting and its shape?"),
         tags$li("What words/topics come up frequently in descriptions of UFO sightings?")
-      ),
-      img(src = "ufo2.jpg", height = 200, style = "display: block; margin: 0 auto;")
+      )
     )
 )}
 

@@ -2,7 +2,7 @@ library(shiny)
 
 conclusion_ui <- function() { 
     fluidPage(
-      h1("Conclusions", style = "color: green; text-align: center;"),
+      h1("Conclusions", style = "color: black; text-align: center;"),
       mainPanel(
       h3("General Conclusions:"),
       tags$ul(
@@ -10,8 +10,7 @@ conclusion_ui <- function() {
         tags$li("The majority of sightings last less than a few minutes, likely due to many being astronomical or aeronautical objects."),
         tags$li("The majority of sightings take place at night, morning, and less so midday. At night it is much easier to see dully lit objects in the sky. Morning being more common than day is likely due to human activity such as commuting and airlines having most flights in the morning hours."),
         tags$li("The majority of sightings reported appear in urban cities, or areas with higher populations.")
-      ),
-      img(src = "ufo.jpg", height = 200, style = "display: block; margin: 0 auto;")
+      )
     )
   )}
 
