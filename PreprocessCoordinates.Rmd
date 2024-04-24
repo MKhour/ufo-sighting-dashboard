@@ -6,7 +6,8 @@ date: "2024-04-24"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '~/Downloads/archive')
+#knitr::opts_knit$set(root.dir = '~/Downloads/archive')
+setwd('C:/Users/Kyle Tran/Downloads')
 ```
 
 ```{r}
@@ -22,7 +23,9 @@ options(tigris_use_cache = TRUE)
 ```
 
 ```{r}
-ufo_data <- read.csv("scrubbed.csv")
+setwd('C:/Users/Kyle Tran/Downloads')
+ufo_data = read.csv("ufoData.csv")
+#ufo_data <- read.csv("scrubbed.csv")
 
 ufo_data$datetime <- as.POSIXct(ufo_data$datetime, format = "%m/%d/%Y %H:%M", errors="coerce")
 ufo_data <- ufo_data[!is.na(ufo_data$datetime), ]
@@ -32,6 +35,7 @@ ufo_data$shape <- ifelse(ufo_data$shape == "", "unknown", ufo_data$shape)
 ufo_data$duration <- as.numeric(as.character(ufo_data$duration))
 ufo_data$latitude <- as.numeric(ufo_data$latitude)
 ufo_data$longitude <- as.numeric(ufo_data$longitude)
+ufo_data$state = toupper(ufo_data$state)
 ```
 
 ```{r}
@@ -60,10 +64,22 @@ results <- results %>%
 
 ```{r}
 final_df <- as.data.frame(results)%>%select(-geometry)
+final_df <- inner_join(ufo_data, results, by = c("latitude", "longitude")) %>% distinct()
+final_df <- final_df %>% filter(state == state_abb | (country != "us" & country != ""))
+final_df$state = toupper(final_df$state)
+final_df$year = year(final_df$datetime)
+final_df$time_of_day <- case_when(
+  hour(final_df$datetime) < 12 ~ "Morning",
+  hour(final_df$datetime) < 18 ~ "Day",
+  TRUE ~ "Night"
+)
 ```
 
 ```{r}
-final_df
+final_df$state_abb <- NULL
+final_df$geometry <- NULL
+final_df$duration..hours.min. <- NULL
+View(final_df)
 ```
 
 ```{r}

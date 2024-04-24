@@ -2,6 +2,7 @@
 library(ggplot2)
 library(shinythemes)
 library(dplyr)
+library(plotly)
 library(stringr)
 library(tidytext) # for unnest_tokens function
 library(wordcloud2)
@@ -54,9 +55,9 @@ word_server <- function(input, output, session) {
   word_counts <- reactive({
     req(input$year_range)
     req(input$threshold)
-    
-    filtered_years <- ufo_with_sentiment_data %>%
-      filter(Year >= as.numeric(input$year_range[1]) & Year <= as.numeric(input$year_range[2]))
+  
+    filtered_years <- ufo_data %>%
+      filter(year >= as.numeric(input$year_range[1]) & year <= as.numeric(input$year_range[2]))
     
     all_words <- unnest_tokens(filtered_years, "word", Description) 
     
@@ -80,8 +81,8 @@ word_server <- function(input, output, session) {
   sentiment_counts <- reactive({
     req(input$sentiment_year_range)
     
-    filtered_years <- ufo_with_sentiment_data %>%
-      filter(Year >= as.numeric(input$sentiment_year_range[1]) & Year <= as.numeric(input$sentiment_year_range[2])) %>%
+    filtered_years <- ufo_data %>%
+      filter(year >= as.numeric(input$sentiment_year_range[1]) & year <= as.numeric(input$sentiment_year_range[2])) %>%
       select(anger, anticipation, disgust, fear, joy, sadness, surprise, trust, negative, positive)
     
     df <- data.frame(colSums(filtered_years))
@@ -127,9 +128,9 @@ word_server <- function(input, output, session) {
   })
   
   output$comment_table <- DT::renderDataTable(DT::datatable({
-    ufo_with_sentiment_data %>%
-      arrange(Year) %>%
-      select(Date, State, Country, Description)
+    ufo_data %>%
+      arrange(year) %>%
+      select(Date, state, country, Description)
   }), rownames = FALSE)
   
   

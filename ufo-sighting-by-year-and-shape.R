@@ -1,48 +1,13 @@
 library(shiny)
 library(leaflet)
-library(lubridate)
-library(sf)
-library(tigris)
 library(plotly)
 library(dplyr)
 library(ggplot2)
-options(tigris_use_cache = TRUE)
 
-#Cleaning the Data for All of App
+#Getting cleaned data
+#ufo_data <- readRDS(file="results.Rda")
+ufo_data <- read.csv("sentiments_and_comments.csv")
 
-# setwd('C:/Users/Kyle Tran/Downloads')
-# setwd('~/Downloads/archive')
-# ufo_data = read.csv("ufoData.csv")
-ufo_data <- read.csv("scrubbed.csv")
-
-ufo_data$datetime <- as.POSIXct(ufo_data$datetime, format = "%m/%d/%Y %H:%M", errors="coerce")
-ufo_data <- ufo_data[!is.na(ufo_data$datetime), ]
-ufo_data <- ufo_data[!ufo_data$state %in% c("", " "), ]
-ufo_data <- ufo_data %>% rename(duration = duration..seconds.)
-ufo_data$shape <- ifelse(ufo_data$shape == "", "unknown", ufo_data$shape)
-ufo_data$duration <- as.numeric(as.character(ufo_data$duration))
-ufo_data$latitude <- as.numeric(ufo_data$latitude)
-ufo_data$longitude <- as.numeric(ufo_data$longitude)
-
-ufo_with_sentiment_data <- read.csv("sentiments_and_comments.csv")
-
-#c. comparing the coordinates
-# results <- as.data.frame(load("results.Rda"))
-results <- readRDS(file="results.Rda")
-# View(results)
-
-ufo_data <- inner_join(ufo_data, results, by = c("latitude", "longitude")) %>% distinct()
-ufo_data$state = toupper(ufo_data$state)
-ufo_data <- ufo_data %>% filter(state == state_abb | (country != "us" & country != ""))
-# View(ufo_data)
-
-#Extracting Years/Times From DateTime
-ufo_data$year <- year(ufo_data$datetime)
-ufo_data$time_of_day <- case_when(
-  hour(ufo_data$datetime) < 12 ~ "Morning",
-  hour(ufo_data$datetime) < 18 ~ "Day",
-  TRUE ~ "Night"
-)
 
 # Get unique states and their counts
 state_counts <- ufo_data %>%
@@ -54,7 +19,11 @@ state_counts <- ufo_data %>%
 top_states <- head(state_counts, 5)
 
 # Sort unique states alphabetically for dropdown menu
-unique_states <- sort(unique(ufo_data$state))
+# unique_states <- sort(unique(ufo_data$state))
+
+city_counts <- ufo_data %>%
+  group_by(city) %>%
+  summarize(count = n())
 
 ###################################################################################################
 
@@ -85,7 +54,6 @@ sightings_by_time_ui <- function(id) {
   )
 )
 }
-
 
 #3. Creating Server for Page
 sightings_by_time_server <- function(input, output, session) {

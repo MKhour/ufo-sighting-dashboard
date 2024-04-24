@@ -6,7 +6,8 @@ date: "2024-04-19"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '~/Downloads/archive')
+#setwd('C:/Users/Kyle Tran/Downloads')
+#knitr::opts_knit$set(root.dir = 'C:/Users/Kyle Tran/Downloads')
 ```
 
 ```{r}
@@ -22,7 +23,8 @@ library(data.table)
 ## Load Data
 ```{r}
 # Load UFO sighting data
-ufo_data <- read.csv("scrubbed.csv")
+ufo_data = final_df
+#ufo_data <- read.csv("scrubbed.csv")
 ```
 
 ## Clean Data
@@ -57,12 +59,16 @@ sentiments <- get_nrc_sentiment(formatted_data)
 ```
 
 ```{r}
-comment_and_sentiment_data <- cbind(ufo_data_clean_comments, test_reading) %>% select(-X)
+comment_and_sentiment_data <- cbind(ufo_data_clean_comments, sentiments) #select(-X)
 ```
 
 ## Save Data
 ```{r}
 save_df <- comment_and_sentiment_data
+save_df$Year <- NULL
+save_df %>% rename(state = State, country = Country)
+
+View(save_df)
 ```
 
 ```{r}

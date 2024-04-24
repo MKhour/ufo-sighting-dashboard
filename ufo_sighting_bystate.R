@@ -3,49 +3,24 @@ library(leaflet)
 library(dplyr)
 library(DT)
 
-#setwd("~/Documents/DS_2003/Final Project/archive (2)")
-
-#ufo_data <- read.csv("ufo_scrubbed.csv")
-#setwd('C:/Users/Kyle Tran/Downloads')
-# ufo_data = read.csv("ufoData.csv")
-
-
-#ufo_data <- ufo_data[!ufo_data$state %in% c("", " "), ]
-
-#ufo_data$latitude <- as.numeric(as.character(ufo_data$latitude))
-#ufo_data$longitude <- as.numeric(as.character(ufo_data$longitude))
-
-#state_counts <- ufo_data %>%
-#  group_by(state) %>%
-#  summarise(count = n()) %>%
-#  arrange(desc(count))
-
-# Get top 5 states with the most UFO sightings
-#top_states <- head(state_counts, 5)
-
-city_counts <- ufo_data %>%
-  group_by(city) %>%
-  summarize(count = n())
-
-# Sort unique states alphabetically
-#unique_states <- sort(unique(ufo_data$state))
-
 # Define UI
-ui <- fluidPage(
+state_ui <- function(id) {
+  ns <- NS(id)
+  fluidPage(
   titlePanel("UFO Sightings in the United States"),
   navbarPage("",
     tabPanel("View Map and States",
      HTML("<p>Select a state from the dropdown menu to explore more about UFO sightings reported in that state.</p>"), # New text added
      sidebarLayout(
        sidebarPanel(
-         selectInput("state", "Select State:", choices = c("Please select state", unique_states)),
+         selectInput(ns("state"), "Select State:", choices = c("Please select state", unique(ufo_data$state))),
          h4("Number of Sightings in Selected State:"),
-         textOutput("selected_state_count"),
+         textOutput(ns("selected_state_count")),
          h4("Top States with Most UFO Sightings:"),
-         dataTableOutput("top_states_table")
+         dataTableOutput(ns("top_states_table"))
        ),
        mainPanel(
-         leafletOutput("map"),
+         leafletOutput(ns("map")),
          HTML("<p><strong>Zoom into the map to select points and learn more about that sighting.</strong></p>") # New caption added
         )
      )
@@ -53,32 +28,32 @@ ui <- fluidPage(
     tabPanel("Compare Cities",
        sidebarLayout(
          sidebarPanel(
-           selectInput('city', "View Cities By:", choices = c("Descending Order", "Ascending Order", Search = "Search")),
+           selectInput(ns('city'), "View Cities By:", choices = c("Descending Order", "Ascending Order")),
            h4("Cities and the Number of UFO Sightings"),
-           numericInput("page", "Page Number:", value = 1, min = 1, max = nrow(city_counts)),
-           uiOutput("searchUI"),
+           numericInput(ns("page"), "Page Number:", value = 1, min = 1, max = nrow(city_counts)),
+           #uiOutput(ns("searchUI")),
 
-           dataTableOutput("current_cities_table"),
+           dataTableOutput(ns("current_cities_table")),
          ),
          mainPanel(
-           plotOutput("city_bar_chart"),
+           plotOutput(ns("city_bar_chart")),
            p("This is a bar graph with the total number of UFO spottings per city")
          )
        )
     )
   )
-)
+)}
 
 # Define server logic
-server <- function(input, output) {
+state_server <- function(input, output, session) {
 
-  output$searchUI <- renderUI({
-    if (input$city == "Search") {
-      textInput("search", "Search City:", "")
-    } else {
-      NULL
-    }
-  })
+  #output$searchUI <- renderUI({
+  #  if (input$city == "Search") {
+  #    textInput("search", "Search City:", "")
+  #  } else {
+  #    NULL
+  #  }
+  #})
   
   filtered_data <- reactive({
     if (input$state == "Please select state") {
@@ -130,14 +105,14 @@ server <- function(input, output) {
   # ==== City logic ==============================================================
   
   
-  filtered_city_data <- reactive({
-      data <- subset(city_counts, grepl(tolower(input$search), tolower(city)))
-      if(nrow(data) > 0) {
-      data$order <- c(1:nrow(data))
-      return(data)
-      }
-      else return(NULL)
-  })
+  # filtered_city_data <- reactive({
+  #     req(input$search)
+  #     data <- subset(city_counts, grepl(tolower(input$search), tolower(city)))
+  #     if(nrow(data) > 0) {
+  #     data$order <- c(1:nrow(data))
+  #     return(data) }
+  #     else return(NULL)
+  # })
   
   sorted_city_counts <- reactive({
     if(input$city == 'Descending Order') {
@@ -197,6 +172,6 @@ server <- function(input, output) {
 }
 
 # Run the application
-shinyApp(ui = ui, server = server)
+#shinyApp(ui = ui, server = server)
 
 
