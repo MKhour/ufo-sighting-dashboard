@@ -34,7 +34,10 @@ word_ui <- function(id) {
                   "Year range:", min = 1910, max = 2014, value = c(1960, 2014)),
     ),
     mainPanel(
-      plotlyOutput(ns("sentiment_bar_graph"))
+      tabsetPanel(
+        tabPanel("Sentiment", plotlyOutput(ns("sentiment_pie_chart"))),
+        tabPanel("Emotions", plotlyOutput(ns("emotion_bar_graph")))
+      )
     )
   ),
   hr(),
@@ -99,13 +102,26 @@ word_server <- function(input, output, session) {
     return(emotions_plot)
   })
   
-  output$sentiment_bar_graph <- renderPlotly({
+  output$emotion_bar_graph <- renderPlotly({
     
-    p <- plot_ly(data = sentiment_counts(), x=~count, y=~sentiment, type='bar', color = ~count,
+    p <- plot_ly(data = sentiment_counts()%>%filter( !(sentiment %in% c("positive", "negative")) ), 
+                 x=~count, y=~sentiment, type='bar', color = ~count,
                  hoverinfo = "x") %>%
-      layout(title ="Occurrence of Sentiments",
+      layout(title ="Occurrence of Emotions",
              xaxis = list(title="Count"),
-             yaxis = list(title="Sentiment"))
+             yaxis = list(title="Emotion"))
+    return(p)
+  })
+  
+  output$sentiment_pie_chart <- renderPlotly({
+    
+    p <- plot_ly(data = sentiment_counts()%>%filter( sentiment %in% c("positive", "negative") ), 
+                 values = ~count, type = 'pie',
+                 labels = ~sentiment,
+                 hoverinfo = "values") %>%
+      layout(title ="Occurrence of Positive and Negative Sentiment",
+             xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+             yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
     return(p)
   })
   
