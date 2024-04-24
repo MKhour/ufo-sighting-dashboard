@@ -34,7 +34,7 @@ word_ui <- function(id) {
                   "Year range:", min = 1910, max = 2014, value = c(1960, 2014)),
     ),
     mainPanel(
-      plotOutput(ns("sentiment_bar_graph"))
+      plotlyOutput(ns("sentiment_bar_graph"))
     )
   ),
   hr(),
@@ -90,7 +90,7 @@ word_server <- function(input, output, session) {
     return(sentiment_count_table)
   })
   
-  output$sentiment_bar_graph <- renderPlot({
+  output$old_sentiment_bar_graph <- renderPlot({
     
     emotions_plot <- ggplot(data=sentiment_counts(), aes(x=sentiment, y=count)) +
       geom_bar(stat="identity") +
@@ -99,14 +99,14 @@ word_server <- function(input, output, session) {
     return(emotions_plot)
   })
   
-  output$old_sentiment_bar_graph <- renderPlot({
-    data <- sentiment_counts()
-    # Render a barplot
-    barplot(data$count, 
-            horiz=TRUE,
-            cex.names = 0.7,
-            las = 1,
-            main = "Sentiments of Descriptions", xlab = "Counts")
+  output$sentiment_bar_graph <- renderPlotly({
+    
+    p <- plot_ly(data = sentiment_counts(), x=~count, y=~sentiment, type='bar', color = ~count,
+                 hoverinfo = "x") %>%
+      layout(title ="Occurrence of Sentiments",
+             xaxis = list(title="Count"),
+             yaxis = list(title="Sentiment"))
+    return(p)
   })
   
   output$comment_table <- DT::renderDataTable(DT::datatable({
