@@ -1,4 +1,4 @@
-#library(shiny)
+library(shiny)
 library(leaflet)
 library(dplyr)
 library(DT)
@@ -13,7 +13,7 @@ state_ui <- function(id) {
      HTML("<p>Select a state from the dropdown menu to explore more about UFO sightings reported in that state.</p>"), # New text added
      sidebarLayout(
        sidebarPanel(
-         selectInput(ns("state"), "Select State:", choices = c("Please select state", unique(ufo_data$state))),
+         selectInput(ns("state"), "Select State:", choices = c("Please select state", sort(unique(ufo_data$state)))),
          h4("Number of Sightings in Selected State:"),
          textOutput(ns("selected_state_count")),
          h4("Top States with Most UFO Sightings:"),

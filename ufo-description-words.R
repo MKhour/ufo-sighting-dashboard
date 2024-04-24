@@ -19,9 +19,9 @@ word_ui <- function(id) {
   sidebarLayout(
     sidebarPanel(
       sliderInput(ns("threshold"),
-                  "Minimum occurence of word:", min = 0, max = 10000, value = 2000, step = 100),
+                  "Minimum occurence of word:", min = 0, max = 10000, value = 200, step = 100),
       sliderInput(ns("year_range"),
-                    "Year range:", min = 1910, max = 2014, value = c(1960, 2014)),
+                    "Year range:", min = 1936, max = 2014, value = c(1936,2014)),
                ),
       mainPanel(
         (wordcloud2Output(ns('word_cloud')))
