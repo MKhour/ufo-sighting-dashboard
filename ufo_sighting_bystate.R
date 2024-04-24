@@ -2,10 +2,12 @@
 library(leaflet)
 library(dplyr)
 library(DT)
+library(ggplot2)
 
 #setwd("~/Documents/DS_2003/Final Project/archive (2)")
 
-#ufo_data <- read.csv("ufo_scrubbed.csv")
+#ufo_data <- read.csv("/Users/sashaporter/Documents/DS_2003/Final Project/archive (2)/ufo_subset.csv")
+
 #setwd('C:/Users/Kyle Tran/Downloads')
 # ufo_data = read.csv("ufoData.csv")
 
@@ -16,18 +18,18 @@ library(DT)
 #ufo_data$longitude <- as.numeric(as.character(ufo_data$longitude))
 
 #state_counts <- ufo_data %>%
-#  group_by(state) %>%
-#  summarise(count = n()) %>%
-#  arrange(desc(count))
+  #group_by(state) %>%
+  #summarise(count = n()) %>%
+ #arrange(desc(count))
 
 # Get top 5 states with the most UFO sightings
 #top_states <- head(state_counts, 5)
 
-city_counts <- ufo_data %>%
-  group_by(city) %>%
-  summarize(count = n())
+#city_counts <- ufo_data %>%
+  #group_by(city) %>%
+  #summarize(count = n())
 
-# Sort unique states alphabetically
+#Sort unique states alphabetically
 #unique_states <- sort(unique(ufo_data$state))
 
 # Define UI
